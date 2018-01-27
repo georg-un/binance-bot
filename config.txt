@@ -1,0 +1,3 @@
+[config]
+# database file path
+db_path: /media/Daten-HDD/Nextcloud/Coding/binance_db/binance.db
