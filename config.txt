@@ -1,3 +1,16 @@
 [config]
 # database file path
 db_path: /media/Daten-HDD/Nextcloud/Coding/binance_db/binance.db
+
+
+[symbols]
+symbol_list = ADAETH, ADXETH, AIONETH
+
+
+[intervals]
+interval_list = 15m
+
+
+[time]
+time_start = beginning
+time_end = now
