@@ -2,13 +2,15 @@
 # database file path
 db_path: /media/Daten-HDD/Nextcloud/Coding/binance_db/binance.db
 
+verbose = True
+
 
 [symbols]
 symbol_list = ADAETH, ADXETH, AIONETH
 
 
 [intervals]
-interval_list = 15m
+interval_list = 15m, 1h
 
 
 [time]
