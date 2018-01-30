@@ -55,13 +55,10 @@ client = Client(api_key, api_sec)
 for symbol in symbols:
     for interval in intervals:
 
-        # define name of table in database
-        table_name = (symbol + '_' + interval, )
-
         # check if table already exists
         with db_con:
             cur = db_con.cursor()
-            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", table_name)
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='{}_{}'".format(symbol, interval))
             if cur.fetchone() is None:
                 table_exists = False
             else:
@@ -74,7 +71,7 @@ for symbol in symbols:
             # create table
             with db_con:
                 cur = db_con.cursor()
-                cur.execute('CREATE TABLE {}_{}('.format(symbol, interval) +
+                cur.execute('CREATE TABLE IF NOT EXISTS {}_{}('.format(symbol, interval) +
                             't_open DATETIME, ' +
                             'open FLOAT, ' +
                             'high FLOAT, ' +
@@ -97,23 +94,27 @@ for symbol in symbols:
             with db_con:
                 cur = db_con.cursor()
                 for x in range(0, len(output)):
-                    cur.execute('INSERT INTO {}_{} '.format(symbol, interval) +
-                                'VALUES({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})'.format(output[x][0],
-                                                                                            output[x][1],
-                                                                                            output[x][2],
-                                                                                            output[x][3],
-                                                                                            output[x][4],
-                                                                                            output[x][5],
-                                                                                            output[x][6],
-                                                                                            output[x][7],
-                                                                                            output[x][8],
-                                                                                            output[x][9],
-                                                                                            output[x][10]))
+                    db_row = (output[x][0],
+                              output[x][1],
+                              output[x][2],
+                              output[x][3],
+                              output[x][4],
+                              output[x][5],
+                              output[x][6],
+                              output[x][7],
+                              output[x][8],
+                              output[x][9],
+                              output[x][10])
+
+                    cur.execute('INSERT INTO {}_{} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'.format(symbol, interval),
+                                db_row)
 
             # print process to console if verbose mode is enabled
             if verbose:
-                print('Symbol {}, interval {}: Historical data has been downloaded and saved to database'.format(symbol, interval))
+                print('Symbol {}, interval {}: Historical data has been downloaded '
+                      'and saved to database'.format(symbol, interval))
 
         # if table already exists and verbose mode is enabled print that to console
         elif table_exists & (verbose == 'True'):
-            print('Symbol {}, interval {}: Table already exists in database. No data has been downloaded.'.format(symbol, interval))
+            print('Symbol {}, interval {}: Table already exists in database. '
+                  'No data has been downloaded.'.format(symbol, interval))
