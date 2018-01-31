@@ -6,13 +6,26 @@ verbose = True
 
 
 [symbols]
-symbol_list = ADAETH, ADXETH, AIONETH
+symbol_list = ADAETH
+#ADXETH, AIONETH
 
 
 [intervals]
-interval_list = 15m, 1h
+interval_list = 15m
+#, 1h
 
 
 [time]
 time_start = beginning
 time_end = now
+
+
+
+
+[bollinger bands]
+bbands_period = 20
+bbands_upper = 2
+bbands_lower = 2
+bbands_matype = 0
+bbands_ref = typical
+# either typical or close
