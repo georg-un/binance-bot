@@ -44,7 +44,7 @@ if time_start == 'beginning':
 # connect to database
 db_con = sqlite3.connect(db_path)
 
-# cet up binance client
+# set up binance client
 client = Client(api_key, api_sec)
 
 
@@ -73,16 +73,16 @@ for symbol in symbols:
                 cur = db_con.cursor()
                 cur.execute('CREATE TABLE IF NOT EXISTS {}_{}('.format(symbol, interval) +
                             't_open DATETIME, ' +
-                            'open FLOAT, ' +
-                            'high FLOAT, ' +
-                            'low FLOAT, ' +
-                            'close FLOAT, ' +
-                            'vol FLOAT, ' +
+                            'open DOUBLE, ' +
+                            'high DOUBLE, ' +
+                            'low DOUBLE, ' +
+                            'close DOUBLE, ' +
+                            'vol DOUBLE, ' +
                             't_close DATETIME, ' +
-                            'u_vol FLOAT, ' +
+                            'u_vol DOUBLE, ' +
                             'no_trds INT, ' +
-                            'tbBav FLOAT, ' +
-                            'tbQav FLOAT)')
+                            'tbBav DOUBLE, ' +
+                            'tbQav DOUBLE)')
 
             # download data
             output = client.get_historical_klines(symbol=symbol,
