@@ -20,6 +20,28 @@ time_start = beginning
 time_end = now
 
 
+# GENERAL INDICATORS
+[general]
+
+# Bollinger Bands
+bbands_period = 20
+bbands_upper = 2
+bbands_lower = 2
+bbands_matype = 0
+bbands_ref = typical
+# bbands_ref is either typical or close
+
+# EMA
+ema_period_short = 7
+ema_period_mid = 25
+ema_period_long = 100
+
+# SMA
+sma_period_short = 7
+sma_period_mid = 25
+sma_period_long = 100
+
+
 # MOMENTUM INDICATORS
 [momentum]
 
@@ -28,6 +50,11 @@ adx_period = 14
 
 # CCI
 cci_period = 14
+
+# MACD
+macd_fastperiod = 12
+macd_slowperiod = 26
+macd_signalperiod = 9
 
 # RSI
 rsi_period = 14
@@ -38,18 +65,5 @@ fastk_period = 5
 fastd_period = 3
 fastd_matype = 0
 
-# MACD
-macd_fastperiod = 12
-macd_slowperiod = 26
-macd_signalperiod = 9
-
-
-# VOLATILITY INDICATORS
-
-[bollinger bands]
-bbands_period = 20
-bbands_upper = 2
-bbands_lower = 2
-bbands_matype = 0
-bbands_ref = typical
-# either typical or close
+# Williams %R
+will_r_period = 14

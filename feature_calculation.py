@@ -5,45 +5,80 @@ import configparser
 import sqlite3
 import talib
 import numpy as np
+import pathlib, logging
 
 
-# READ FILES
+# READ CONFIG
 
 def getlist(option, sep=',', chars=None):
     """Return a list from a ConfigParser option. By default,
        split on a comma and strip whitespaces."""
-    return [ chunk.strip(chars) for chunk in option.split(sep) ]
+    return [chunk.strip(chars) for chunk in option.split(sep)]
+
 
 # set up config parser
 configParser = configparser.ConfigParser()
 
-# read config
+# read config-file
 configParser.read(r'config.txt')
 
 db_path = configParser.get('config', 'db_path')
 symbols = getlist(configParser.get('symbols', 'symbol_list'))
 intervals = getlist(configParser.get('intervals', 'interval_list'))
 
-# read bollinger bands config
-bbands_period = int(configParser.get('bollinger bands', 'bbands_period'))
-bbands_upper = int(configParser.get('bollinger bands', 'bbands_upper'))
-bbands_lower = int(configParser.get('bollinger bands', 'bbands_lower'))
-bbands_matype = int(configParser.get('bollinger bands', 'bbands_matype'))
-bbands_ref = configParser.get('bollinger bands', 'bbands_ref')
+# get config for general indicators
 
-# read momentum incidator config
+# bollinger bands
+bbands_period = int(configParser.get('general', 'bbands_period'))
+bbands_upper = int(configParser.get('general', 'bbands_upper'))
+bbands_lower = int(configParser.get('general', 'bbands_lower'))
+bbands_matype = int(configParser.get('general', 'bbands_matype'))
+bbands_ref = configParser.get('general', 'bbands_ref')
+
+# ema
+ema_period_short = int(configParser.get('general', 'ema_period_short'))
+ema_period_mid = int(configParser.get('general', 'ema_period_mid'))
+ema_period_long = int(configParser.get('general', 'ema_period_long'))
+
+# sma
+sma_period_short = int(configParser.get('general', 'sma_period_short'))
+sma_period_mid = int(configParser.get('general', 'sma_period_mid'))
+sma_period_long = int(configParser.get('general', 'sma_period_long'))
+
+# get config for momentum indicators
+
+# adx, cci, rsi
 adx_period = int(configParser.get('momentum', 'adx_period'))
 cci_period = int(configParser.get('momentum', 'cci_period'))
 rsi_period = int(configParser.get('momentum', 'rsi_period'))
 
+# stochastic rsi
 stoch_rsi_period = int(configParser.get('momentum', 'stoch_rsi_period'))
 fastk_period = int(configParser.get('momentum', 'fastk_period'))
 fastd_period = int(configParser.get('momentum', 'fastd_period'))
 fastd_matype = int(configParser.get('momentum', 'fastd_matype'))
 
+# williams %r
+will_r_period = int(configParser.get('momentum', 'will_r_period'))
+
+# macd
 macd_fastperiod = int(configParser.get('momentum', 'macd_fastperiod'))
 macd_slowperiod = int(configParser.get('momentum', 'macd_slowperiod'))
 macd_signalperiod = int(configParser.get('momentum', 'macd_signalperiod'))
+
+
+# SET UP LOGGING
+
+# create log-directory, if it does not already exist yet
+pathlib.Path("log/").mkdir(parents=True, exist_ok=True)
+
+# set up log-handler
+logger = logging.getLogger('feature_calculation')
+log_handler = logging.FileHandler('log/feature_calculation.log')
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+log_handler.setFormatter(formatter)
+logger.addHandler(log_handler)
+logger.setLevel(logging.INFO)
 
 
 # SET UP DATABASE CONNECTION
@@ -53,6 +88,65 @@ db_con = sqlite3.connect(db_path)
 
 
 # INDICATOR FUNCTIONS
+
+
+# GENERAL INDICATORS
+
+def get_bollinger_bands(price_list, date_list, bbands_period, bbands_upper, bbands_lower, bbands_matype):
+    """Calculate Bollinger Bands given a price list and parameters from config.txt. Return a 4-dimensional numpy array
+    containing the three Bollinger Bands as well as date values.
+    Note: price values have to be multiplied before calculations and divided afterwards due to a bug in talib occuring
+    with small values (https://github.com/mrjbq7/ta-lib/issues/151)"""
+
+    # calculate bollinger bands
+    results_list = talib.BBANDS(price_list * 10000,
+                                timeperiod=bbands_period,
+                                nbdevup=bbands_upper,
+                                nbdevdn=bbands_lower,
+                                matype=bbands_matype)
+
+    # divide results by 100000
+    bband_up = results_list[0] / 10000
+    bband_mid = results_list[1] / 10000
+    bband_low = results_list[2] / 10000
+
+    # construct 4d-array and return it
+    bollinger_array = np.column_stack((bband_up, bband_mid, bband_low, date_list))
+    return bollinger_array
+
+
+def get_ema(price_list, date_list, ema_period_short, ema_period_mid, ema_period_long):
+    price_array = np.array([i[0] for i in price_list])
+
+    # calculate an ema for each period
+    ema_short = talib.EMA(price_array,
+                          timeperiod=ema_period_short)
+    ema_mid = talib.EMA(price_array,
+                        timeperiod=ema_period_mid)
+    ema_long = talib.EMA(price_array,
+                         timeperiod=ema_period_long)
+
+    # construct 4d-array and return it
+    ema = np.column_stack((ema_short, ema_mid, ema_long,
+                           np.array([i[0] for i in date_list])))
+    return ema
+
+
+def get_sma(price_list, date_list, sma_period_short, sma_period_mid, sma_period_long):
+    price_array = np.array([i[0] for i in price_list])
+
+    # calculate an ema for each period
+    sma_short = talib.SMA(price_array,
+                          timeperiod=sma_period_short)
+    sma_mid = talib.SMA(price_array,
+                        timeperiod=sma_period_mid)
+    sma_long = talib.SMA(price_array,
+                         timeperiod=sma_period_long)
+
+    # construct 4d-array and return it
+    sma = np.column_stack((sma_short, sma_mid, sma_long,
+                           np.array([i[0] for i in date_list])))
+    return sma
 
 
 def get_typical_price(high_list, low_list, close_list, date_list):
@@ -144,41 +238,52 @@ def get_rsi(close_list, date_list, rsi_period):
 def get_stoch_rsi(close_list, date_list, stoch_rsi_period, fastk_period, fastd_period, fastd_matype):
     """Calculate Stochastic RSI given only close values as well as parameters from config.txt. Return a
        2-dimensional numpy array containing the Stochastic RSI-values and the respective timestamps."""
+
+    # calculate stochastic rsi
     stoch_rsi = talib.STOCHRSI(np.array([i[0] * 10000 for i in close_list]),
                                timeperiod=stoch_rsi_period,
                                fastk_period=fastk_period,
                                fastd_period=fastd_period,
                                fastd_matype=fastd_matype)
+
+    # construct 4-dimensional array and return it
     stoch_rsi = np.column_stack((stoch_rsi[0], stoch_rsi[1], np.array([i[0] for i in date_list])))
     return stoch_rsi
 
 
-# VOLATILITY INDICATORS
+def get_will_r(high_list, low_list, close_list, date_list, will_r_period):
+    """Calculate Williams %R given high, low & close values as well as a period-parameter from config.txt. Return a
+       2-dimensional numpy array containing the Williams %R-values and the respective timestamps."""
 
-def get_bollinger_bands(price_list, date_list, bbands_period, bbands_upper, bbands_lower, bbands_matype):
-    """Calculate Bollinger Bands given a price list and parameters from config.txt. Return a 4-dimensional numpy array
-    containing the three Bollinger Bands as well as date values.
-    Note: price values have to be multiplied before calculations and divided afterwards due to a bug in talib occuring
-    with small values (https://github.com/mrjbq7/ta-lib/issues/151)"""
+    # calculate williams %r
+    will_r = talib.WILLR(high=np.array([i[0] for i in high_list]),
+                         low=np.array([i[0] for i in low_list]),
+                         close=np.array([i[0] for i in close_list]),
+                         timeperiod=will_r_period)
 
-    # calculate bollinger bands
-    results_list = talib.BBANDS(price_list * 10000,
-                                timeperiod=bbands_period,
-                                nbdevup=bbands_upper,
-                                nbdevdn=bbands_lower,
-                                matype=bbands_matype)
+    # add timestamps and return array
+    will_r = np.column_stack((will_r, np.array([i[0] for i in date_list])))
+    return will_r
 
-    # divide results by 100000
-    bband_up = results_list[0] / 10000
-    bband_mid = results_list[1] / 10000
-    bband_low = results_list[2] / 10000
 
-    # construct 4d-array and return it
-    bollinger_array = np.column_stack((bband_up, bband_mid, bband_low, date_list))
-    return bollinger_array
+# VOLUME INDICATORS
+
+def get_obv(price_list, volume_list, date_list):
+    """Calculate On Balance Volume given price and volume values. Return a 2-dimensional numpy array
+       containing the OBV-values and the respective timestamps."""
+
+    # calculate obv
+    obv = talib.OBV(np.array([i[0] for i in price_list]),
+                    np.array([i[0] for i in volume_list]))
+
+    # add timestamps and return array
+    obv = np.column_stack((obv, np.array([i[0] for i in date_list])))
+    return obv
 
 
 # CALCULATE INDICATORS
+
+
 # Create a table for indicators for every combination of symbols and intervals (foreign key is t_open).
 # Subsequently, calculate all indicators and write them to the new table.
 for symbol in symbols:
@@ -206,6 +311,12 @@ for symbol in symbols:
                             'bband_up DOUBLE, ' +
                             'bband_mid DOUBLE, ' +
                             'bband_low DOUBLE, ' +
+                            'ema_short, ' +
+                            'ema_mid, ' +
+                            'ema_long, ' +
+                            'sma_short, ' +
+                            'sma_mid, ' +
+                            'sma_long, ' +
                             'adx DOUBLE, ' +
                             'cci DOUBLE, ' +
                             'macd DOUBE, ' +
@@ -213,7 +324,9 @@ for symbol in symbols:
                             'macd_hist DOUBLE, ' +
                             'rsi DOUBLE, ' +
                             'stoch_rsi_k DOUBLE, ' +
-                            'stoch_rsi_d DOUBLE)')
+                            'stoch_rsi_d DOUBLE, ' +
+                            'will_r DOUBLE, ' +
+                            'obv DOUBLE)')
 
                 # copy column t_open to the new table
                 cur.execute('INSERT INTO {}_{}_feat (t_open)'.format(symbol, interval) +
@@ -229,6 +342,10 @@ for symbol in symbols:
                 close_list = cur.fetchall()
                 cur.execute('SELECT t_open FROM {}_{}'.format(symbol, interval))
                 date_list = cur.fetchall()
+                cur.execute('SELECT vol FROM {}_{}'.format(symbol, interval))
+                volume_list = cur.fetchall()
+
+                # GENERAL INDICATORS
 
                 # INDICATOR: TYPICAL PRICE
                 # calculate the typical price
@@ -239,6 +356,64 @@ for symbol in symbols:
                     cur.execute('UPDATE {}_{}_feat SET price = ? WHERE t_open = ?'.format(symbol, interval),
                                 (typical_price_array[x, 0],
                                  int(typical_price_array[x, 1])))
+
+                # INDICATOR: BOLLINGER BANDS
+                # use the reference price according to the setting in config.txt
+                if bbands_ref == 'close':
+                    bollinger_price = np.array([i[0] for i in close_list])
+                else:
+                    bollinger_price = typical_price_array[:, 0]
+
+                # calculate bollinger bands
+                bollinger_array = get_bollinger_bands(price_list=bollinger_price,
+                                                      date_list=date_list,
+                                                      bbands_period=bbands_period,
+                                                      bbands_upper=bbands_upper,
+                                                      bbands_lower=bbands_lower,
+                                                      bbands_matype=bbands_matype)
+
+                # write bollinger bands to database
+                for x in range(0, len(bollinger_array)):
+                    cur.execute('''UPDATE {}_{}_feat SET bband_up = ?, bband_mid = ?, 
+                    bband_low = ? WHERE t_open = ?'''.format(symbol, interval),
+                                (bollinger_array[x, 0],
+                                 bollinger_array[x, 1],
+                                 bollinger_array[x, 2],
+                                 int(bollinger_array[x, 3])))
+
+                # INDICATOR: EMA
+                # calculate ema
+                ema_array = get_ema(price_list=close_list,
+                                    date_list=date_list,
+                                    ema_period_short=ema_period_short,
+                                    ema_period_mid=ema_period_mid,
+                                    ema_period_long=ema_period_long)
+
+                # write ema to database
+                for x in range(0, len(ema_array)):
+                    cur.execute('''UPDATE {}_{}_feat SET ema_short = ?, ema_mid = ?, 
+                    ema_long = ? WHERE t_open = ?'''.format(symbol, interval),
+                                (ema_array[x, 0],
+                                 ema_array[x, 1],
+                                 ema_array[x, 2],
+                                 int(ema_array[x, 3])))
+
+                # INDICATOR: SMA
+                # calculate sma
+                sma_array = get_sma(price_list=close_list,
+                                    date_list=date_list,
+                                    sma_period_short=sma_period_short,
+                                    sma_period_mid=sma_period_mid,
+                                    sma_period_long=sma_period_long)
+
+                # write sma to database
+                for x in range(0, len(sma_array)):
+                    cur.execute('''UPDATE {}_{}_feat SET sma_short = ?, sma_mid = ?, 
+                    sma_long = ? WHERE t_open = ?'''.format(symbol, interval),
+                                (sma_array[x, 0],
+                                 sma_array[x, 1],
+                                 sma_array[x, 2],
+                                 int(sma_array[x, 3])))
 
                 # MOMENTUM INDICATORS
 
@@ -314,32 +489,35 @@ for symbol in symbols:
                                  stoch_rsi_array[x, 1],
                                  int(stoch_rsi_array[x, 2])))
 
+                # INDICATOR: WILLIAMS %R
+                # calculate willams %r
+                will_r_array = get_will_r(high_list=high_list,
+                                          low_list=low_list,
+                                          close_list=close_list,
+                                          date_list=date_list,
+                                          will_r_period=will_r_period)
 
-                # VOLATILITY INDICATORS
+                # write willams %r to database
+                for x in range(0, len(will_r_array)):
+                    cur.execute('UPDATE {}_{}_feat SET will_r = ? WHERE t_open = ?'.format(symbol, interval),
+                                (will_r_array[x, 0],
+                                 int(will_r_array[x, 1])))
 
-                # INDICATOR: BOLLINGER BANDS
-                # use the reference price according to the setting in config.txt
-                if bbands_ref == 'close':
-                    bollinger_price = np.array([i[0] for i in close_list])
-                else:
-                    bollinger_price = typical_price_array[:, 0]
+                # VOLUME INDICATORS
 
-                # calculate bollinger bands
-                bollinger_array = get_bollinger_bands(price_list=bollinger_price,
-                                                      date_list=date_list,
-                                                      bbands_period=bbands_period,
-                                                      bbands_upper=bbands_upper,
-                                                      bbands_lower=bbands_lower,
-                                                      bbands_matype=bbands_matype)
+                # INDICATOR: OBV
+                # calculate obv
+                obv_array = get_obv(price_list=close_list,
+                                    volume_list=volume_list,
+                                    date_list=date_list)
 
-                # write bollinger bands to database
-                for x in range(0, len(bollinger_array)):
-                    cur.execute('''UPDATE {}_{}_feat SET bband_up = ?, bband_mid = ?, 
-                    bband_low = ? WHERE t_open = ?'''.format(symbol, interval),
-                                (bollinger_array[x, 0],
-                                 bollinger_array[x, 1],
-                                 bollinger_array[x, 2],
-                                 int(bollinger_array[x, 3])))
+                # write obv to database
+                for x in range(0, len(obv_array)):
+                    cur.execute('UPDATE {}_{}_feat SET obv = ? WHERE t_open = ?'.format(symbol, interval),
+                                (obv_array[x, 0],
+                                 int(obv_array[x, 1])))
 
+                logger.info('Table {}_{}_feat has successfully been created and filled with indicator values.'.format(symbol, interval))
 
-
+        else:
+            logger.warning('Table {}_{}_feat has NOT been created, because it already existed in database.'.format(symbol, interval))
