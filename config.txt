@@ -20,7 +20,31 @@ time_start = beginning
 time_end = now
 
 
+# MOMENTUM INDICATORS
+[momentum]
 
+# ADX
+adx_period = 14
+
+# CCI
+cci_period = 14
+
+# RSI
+rsi_period = 14
+
+# Stochastic RSI
+stoch_rsi_period = 14
+fastk_period = 5
+fastd_period = 3
+fastd_matype = 0
+
+# MACD
+macd_fastperiod = 12
+macd_slowperiod = 26
+macd_signalperiod = 9
+
+
+# VOLATILITY INDICATORS
 
 [bollinger bands]
 bbands_period = 20
