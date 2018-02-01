@@ -19,9 +19,15 @@ interval_list = 15m
 time_start = beginning
 time_end = now
 
-
+##### INDICATORS
 # GENERAL INDICATORS
 [general]
+
+# exponential smoothing
+exp_smoothing_enabled = True
+exp_smoothing_alpha = 0.3
+
+
 
 # Bollinger Bands
 bbands_period = 20

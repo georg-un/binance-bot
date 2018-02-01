@@ -5,6 +5,7 @@ import configparser
 import sqlite3
 import talib
 import numpy as np
+import pandas as pd
 import pathlib, logging
 
 
@@ -27,6 +28,10 @@ symbols = getlist(configParser.get('symbols', 'symbol_list'))
 intervals = getlist(configParser.get('intervals', 'interval_list'))
 
 # get config for general indicators
+
+# exponential smoothing
+exp_smoothing_enabled = configParser.get('general', 'exp_smoothing_enabled') == 'True'
+exp_smoothing_alpha = float(configParser.get('general', 'exp_smoothing_alpha'))
 
 # bollinger bands
 bbands_period = int(configParser.get('general', 'bbands_period'))
@@ -88,6 +93,17 @@ db_con = sqlite3.connect(db_path)
 
 
 # INDICATOR FUNCTIONS
+
+
+def exponential_smoothing(input_list, exp_smoothing_alpha):
+    smooth_list = np.array([i[0] for i in input_list])
+    smooth_list = pd.DataFrame(smooth_list)
+
+    smooth_list = pd.ewma(smooth_list, alpha=exp_smoothing_alpha)
+
+    smooth_list = np.array(smooth_list).tolist()
+    return smooth_list
+
 
 
 # GENERAL INDICATORS
@@ -344,6 +360,16 @@ for symbol in symbols:
                 date_list = cur.fetchall()
                 cur.execute('SELECT vol FROM {}_{}'.format(symbol, interval))
                 volume_list = cur.fetchall()
+                print([close_list[x][0] for x in range(1000, 1010)])
+
+                # perform exponential smoothing, if exponential smoothing is set in config.txt
+                if exp_smoothing_enabled:
+                    high_list = exponential_smoothing(input_list=high_list, exp_smoothing_alpha=exp_smoothing_alpha)
+                    low_list = exponential_smoothing(input_list=low_list, exp_smoothing_alpha=exp_smoothing_alpha)
+                    close_list = exponential_smoothing(input_list=close_list, exp_smoothing_alpha=exp_smoothing_alpha)
+                    volume_list = exponential_smoothing(input_list=volume_list, exp_smoothing_alpha=exp_smoothing_alpha)
+                    print('smoothed')
+                    print([close_list[x] for x in range(1000, 1010)])
 
                 # GENERAL INDICATORS
 
