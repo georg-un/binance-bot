@@ -52,10 +52,11 @@ sma_period_long = int(configParser.get('general', 'sma_period_long'))
 
 # get config for momentum indicators
 
-# adx, cci, rsi
+# adx, cci, rsi, roc
 adx_period = int(configParser.get('momentum', 'adx_period'))
 cci_period = int(configParser.get('momentum', 'cci_period'))
 rsi_period = int(configParser.get('momentum', 'rsi_period'))
+roc_period = int(configParser.get('momentum', 'roc_period'))
 
 # stochastic rsi
 stoch_rsi_period = int(configParser.get('momentum', 'stoch_rsi_period'))
@@ -251,6 +252,19 @@ def get_rsi(close_list, date_list, rsi_period):
     return rsi
 
 
+def get_roc(close_list, date_list, roc_period):
+    """Calculate ROC given only close values as well as a period-parameter from config.txt. Return a
+           2-dimensional numpy array containing the ROC-values and the respective timestamps."""
+
+    # calculate roc
+    roc = talib.ROC(np.array([i[0] * 10000 for i in close_list]),
+                    timeperiod=roc_period)
+
+    # combine roc-array with timestamps and return it
+    roc = np.column_stack((roc, np.array([i[0] for i in date_list])))
+    return roc
+
+
 def get_stoch_rsi(close_list, date_list, stoch_rsi_period, fastk_period, fastd_period, fastd_matype):
     """Calculate Stochastic RSI given only close values as well as parameters from config.txt. Return a
        2-dimensional numpy array containing the Stochastic RSI-values and the respective timestamps."""
@@ -339,6 +353,7 @@ for symbol in symbols:
                             'macd_signal DOUBLE, ' +
                             'macd_hist DOUBLE, ' +
                             'rsi DOUBLE, ' +
+                            'roc DOUBLE, ' +
                             'stoch_rsi_k DOUBLE, ' +
                             'stoch_rsi_d DOUBLE, ' +
                             'will_r DOUBLE, ' +
@@ -360,16 +375,13 @@ for symbol in symbols:
                 date_list = cur.fetchall()
                 cur.execute('SELECT vol FROM {}_{}'.format(symbol, interval))
                 volume_list = cur.fetchall()
-                print([close_list[x][0] for x in range(1000, 1010)])
 
-                # perform exponential smoothing, if exponential smoothing is set in config.txt
+                # perform exponential smoothing, if exponential smoothing is enabled in config.txt
                 if exp_smoothing_enabled:
                     high_list = exponential_smoothing(input_list=high_list, exp_smoothing_alpha=exp_smoothing_alpha)
                     low_list = exponential_smoothing(input_list=low_list, exp_smoothing_alpha=exp_smoothing_alpha)
                     close_list = exponential_smoothing(input_list=close_list, exp_smoothing_alpha=exp_smoothing_alpha)
                     volume_list = exponential_smoothing(input_list=volume_list, exp_smoothing_alpha=exp_smoothing_alpha)
-                    print('smoothed')
-                    print([close_list[x] for x in range(1000, 1010)])
 
                 # GENERAL INDICATORS
 
@@ -497,6 +509,18 @@ for symbol in symbols:
                     cur.execute('UPDATE {}_{}_feat SET rsi = ? WHERE t_open = ?'.format(symbol, interval),
                                 (rsi_array[x, 0],
                                  int(rsi_array[x, 1])))
+
+                # INDICATOR: ROC
+                # calculate roc
+                roc_array = get_roc(close_list=close_list,
+                                    date_list=date_list,
+                                    roc_period=roc_period)
+
+                # write roc to database
+                for x in range(0, len(roc_array)):
+                    cur.execute('UPDATE {}_{}_feat SET roc = ? WHERE t_open = ?'.format(symbol, interval),
+                                (roc_array[x, 0],
+                                 int(roc_array[x, 1])))
 
                 # INDICATOR: STOCHASTIC RSI
                 # calculate stochastic rsi

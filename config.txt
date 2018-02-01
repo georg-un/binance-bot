@@ -23,11 +23,9 @@ time_end = now
 # GENERAL INDICATORS
 [general]
 
-# exponential smoothing
+# Exponential smoothing
 exp_smoothing_enabled = True
 exp_smoothing_alpha = 0.3
-
-
 
 # Bollinger Bands
 bbands_period = 20
@@ -70,6 +68,9 @@ stoch_rsi_period = 14
 fastk_period = 5
 fastd_period = 3
 fastd_matype = 0
+
+# ROC
+roc_period = 10
 
 # Williams %R
 will_r_period = 14
