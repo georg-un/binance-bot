@@ -1,6 +1,6 @@
 [config]
 # database file path
-db_path: /media/Daten-HDD/Nextcloud/Coding/binance_db/binance.db
+db_path: /media/Daten-HDD/Nextcloud/Coding/binance_bot/binance_db/binance.db
 
 verbose = True
 
