@@ -14,12 +14,13 @@ def lstm_model(features, labels, mode, params):
                          shape=[-1, params['batch_size'], 1])
 
     # create LSTM cells
-    first_cell = rnn.BasicLSTMCell(num_units=64, activation=tf.nn.relu)
-    second_cell = rnn.BasicLSTMCell(num_units=32, activation=tf.nn.relu)
-    third_cell = rnn.BasicLSTMCell(num_units=16, activation=tf.nn.relu)
+    first_cell = rnn.BasicLSTMCell(num_units=128, activation=tf.nn.relu)
+    second_cell = rnn.BasicLSTMCell(num_units=64, activation=tf.nn.relu)
+    third_cell = rnn.BasicLSTMCell(num_units=32, activation=tf.nn.relu)
+    fourth_cell = rnn.BasicLSTMCell(num_units=16, activation=tf.nn.relu)
 
     # put LSTM cells together
-    multi_cell = tf.nn.rnn_cell.MultiRNNCell([first_cell, second_cell, third_cell], state_is_tuple=True)
+    multi_cell = tf.nn.rnn_cell.MultiRNNCell([first_cell, second_cell, third_cell, fourth_cell], state_is_tuple=True)
     rnn_output, states = tf.nn.dynamic_rnn(multi_cell, input_layer, dtype=tf.float32)
 
     # dense outputs
@@ -40,14 +41,14 @@ def lstm_model(features, labels, mode, params):
     mae = tf.metrics.mean_absolute_error(targets, outputs, name='mean_absolute_error')
     mse = tf.metrics.mean_squared_error(targets, outputs, name='mean_squared_error')
     rmse = tf.metrics.root_mean_squared_error(targets, outputs, name='root_mean_squared_error')
-    #mre = tf.metrics.mean_relative_error(targets, outputs, targets, name='mean_relative_error')
 
-    metrics = {'mean_absolute_error': mae}
+    metrics = {'mean_absolute_error': mae,
+               'mean_squared_error': mse,
+               'root_mean_squared_error': rmse}
 
     tf.summary.scalar('mean_absolute_error', mae[1])
     tf.summary.scalar('mean_squared_error', mse[1])
     tf.summary.scalar('root_mean_squared_error', rmse[1])
-    #tf.summary.scalar('mean_relative_error', mre[1])
     tf.summary.merge_all()
 
     if mode == tf.estimator.ModeKeys.EVAL:

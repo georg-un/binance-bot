@@ -13,6 +13,7 @@ from regressors.modules.regression_modules import get_feature_columns
 from regressors.modules.lstm_function import lstm_model
 
 
+# READ CONFIG
 
 # set up config parser
 configParser = configparser.ConfigParser()
@@ -83,3 +84,5 @@ regressor = tf.estimator.Estimator(model_fn=lstm_model,
 
 # train model
 regressor.train(input_fn=lambda: train_input_fn(train_X, train_y, BATCH_SIZE), steps=int(len(train_y)/BATCH_SIZE))
+
+regressor.evaluate(input_fn=lambda: train_input_fn(train_X, train_y, BATCH_SIZE), steps=int(len(train_y)/BATCH_SIZE))
