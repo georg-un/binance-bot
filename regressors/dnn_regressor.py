@@ -75,11 +75,11 @@ feature_columns = get_feature_columns(train_X)
 # define regressor
 model = tf.estimator.DNNRegressor(hidden_units=[256, 128, 64, 32, 16],
                                   feature_columns=feature_columns,
-                                  model_dir='/home/georg/test/')
+                                  model_dir='/home/georg/test/dnn')
 
 
 # train model
-model.train(input_fn=lambda: train_input_fn(train_X, train_y, 50), steps=1500)
+model.train(input_fn=lambda: train_input_fn(train_X, train_y, BATCH_SIZE), steps=int(len(train_y)/BATCH_SIZE))
 
 # evaluate model
-model.evaluate(input_fn=lambda: train_input_fn(test_X, test_y, 50))
+model.evaluate(input_fn=lambda: train_input_fn(test_X, test_y, BATCH_SIZE))
