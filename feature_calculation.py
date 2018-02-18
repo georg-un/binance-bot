@@ -7,6 +7,7 @@ import talib
 import numpy as np
 import pandas as pd
 import pathlib, logging
+from sklearn.preprocessing import LabelEncoder
 
 
 # READ CONFIG
@@ -314,6 +315,10 @@ def get_obv(price_list, volume_list, date_list):
 # CALCULATE INDICATORS
 
 
+# enumerate symbols
+symbol_encoder = LabelEncoder()
+symbol_encoder.fit(symbols)
+
 # Create a table for indicators for every combination of symbols and intervals (foreign key is t_open).
 # Subsequently, calculate all indicators and write them to the new table.
 for symbol in symbols:
@@ -357,7 +362,8 @@ for symbol in symbols:
                             'stoch_rsi_k DOUBLE, ' +
                             'stoch_rsi_d DOUBLE, ' +
                             'will_r DOUBLE, ' +
-                            'obv DOUBLE)')
+                            'obv DOUBLE, ' +
+                            'symbol int)')
 
                 # copy column t_open to the new table
                 cur.execute('INSERT INTO {}_{}_feat (t_open)'.format(symbol, interval) +
@@ -566,6 +572,10 @@ for symbol in symbols:
                     cur.execute('UPDATE {}_{}_feat SET obv = ? WHERE t_open = ?'.format(symbol, interval),
                                 (obv_array[x, 0],
                                  int(obv_array[x, 1])))
+
+                # SYMBOL ENCONDING
+                cur.execute('UPDATE {}_{}_feat SET symbol = {}'.format(symbol, interval,
+                                                                      symbol_encoder.transform([symbol])[0]))
 
                 logger.info('Table {}_{}_feat has successfully been created and filled with indicator values.'.format(symbol, interval))
 
