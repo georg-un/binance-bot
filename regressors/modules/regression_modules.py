@@ -36,7 +36,8 @@ def transform_fn(features, labels):
                 'stoch_rsi_k': array(features[:, 16]).astype('float32'),
                 'stoch_rsi_d': array(features[:, 17]).astype('float32'),
                 'will_r': array(features[:, 18]).astype('float32'),
-                'obv': array(features[:, 19]).astype('float32')}
+                'obv': array(features[:, 19]).astype('float32'),
+                'symbol': array(features[:, 20]).astype('float32')}
 
     labels = array(labels[:]).astype('float32')
     return features, labels
@@ -106,7 +107,8 @@ def get_default_feature_columns():
                 'stoch_rsi_k': [],
                 'stoch_rsi_d': [],
                 'will_r': [],
-                'obv': []}
+                'obv': [],
+                'symbol': []}
 
     feature_columns = []
 
@@ -136,33 +138,49 @@ def combine_symbols(features_by_symbol, chunksize, batchsize, shuffle=True):
 
     """
 
-    if shuffle:
-        if len(features_by_symbol) % chunksize != 0:
-            print('features by symbol (length: {}) is not divisible by the chunksize {} without a remainder'.format(
-                len(features_by_symbol),
-                chunksize))
-            return
-        elif len(features_by_symbol) % batchsize != 0:
-            print('features by symbol (length: {}) is not divisible by the batchsize {} without a remainder'.format(
-                len(features_by_symbol),
-                batchsize))
-            return
-
     # combine datasets
-    dataset = array([]).astype('float32')
+    dataset = []
 
     for key in features_by_symbol:
-        np.append(dataset, features_by_symbol[key])
+        dataset.append(features_by_symbol[key].tolist())
+
+    dataset = np.asarray(dataset[0])
 
     if shuffle:
+        n_col = len(dataset[0])
+
+        # if the number of observations is not divisible either by the chunksize or by the batchsize, keep the highest
+        # possible number of observations which is divisible by both
+        if (len(dataset) % chunksize != 0) | (len(dataset) % batchsize != 0):
+
+            if len(dataset) % chunksize != 0:
+                print('Number of observations ({}) is not divisible by the chunksize {} without a remainder.'.format(
+                    len(dataset),
+                    chunksize))
+            if len(dataset) % batchsize != 0:
+                print('Number of obervations ({}) is not divisible by the batchsize {} without a remainder'.format(
+                    len(dataset),
+                    batchsize))
+
+            # find highest number of observations which is divisible by batchsize and chunksize
+            # and keep only those observations
+            dataset_length = len(dataset)
+
+            while (dataset_length % chunksize != 0) | (dataset_length % batchsize != 0):
+                dataset_length -= 1
+
+            dataset = dataset[:dataset_length]
+
+            print('Keeping only {} observations.'.format(dataset_length))
+
         # change dimension of array to shuffle in chunks
-        dataset = dataset.reshape(-1, chunksize)
+        dataset = dataset.reshape(-1, (len(dataset[0])*chunksize))
 
         # shuffle dataset
         np.random.shuffle(dataset)
 
         # flatten dataset to a 1 dimensional array
-        dataset = dataset.flatten()
+        dataset = dataset.reshape(-1, n_col)
 
     # return whole numpy array
     return dataset
