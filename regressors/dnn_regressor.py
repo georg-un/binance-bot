@@ -14,6 +14,7 @@ from regressors.modules.regression_modules import transform_fn
 from regressors.modules.regression_modules import train_input_fn
 from regressors.modules.regression_modules import get_default_feature_columns
 from regressors.modules.regression_modules import combine_symbols
+from regressors.modules.regression_modules import get_return
 
 
 # READ CONFIG
@@ -68,18 +69,20 @@ with db_con:
 
         # create training data
         train_X = data[:test_split, 2:]
-        train_y = data[F_HORIZON:F_HORIZON + test_split, 0]
+        train_y = data[:F_HORIZON + test_split, 0]
+        train_y = get_return(train_y, F_HORIZON)
 
         # create test data
-        test_X = data[test_split + 1: len(data) - F_HORIZON - 1, 2:]
-        test_y = data[test_split + 1 + F_HORIZON: len(data) - 1, 0]
+        test_X = data[test_split + 1: len(data) - F_HORIZON, 2:]
+        test_y = data[test_split + 1:, 0]
+        test_y = get_return(test_y, F_HORIZON)
 
         # scale data
         scaler = MinMaxScaler()
 
         train_X = scaler.fit_transform(train_X)
-        train_y = scaler.fit_transform(train_y.reshape(-1, 1))
-        #train_y = train_y.reshape(-1, 1)
+        #train_y = scaler.fit_transform(train_y.reshape(-1, 1))
+        train_y = train_y.reshape(-1, 1)
 
         test_X = scaler.fit_transform(test_X)
         #test_y = scaler.fit_transform(test_y.reshape(-1, 1))
@@ -109,7 +112,8 @@ train_X, train_y = transform_fn(train_X, train_y)
 # TRAIN MODEL
 
 # train model
-for _ in range(0, 5):
+for epoch in range(0, 50):
+    print('Training: epoch {}'.format(epoch))
     regressor.train(input_fn=lambda: train_input_fn(train_X, train_y, BATCH_SIZE), steps=int(len(train_y)/BATCH_SIZE))
 
 
@@ -122,7 +126,7 @@ for symbol in symbols:
 
     print('Evaluating {}'.format(symbol))
 
-    regressor.evaluate(input_fn=lambda: train_input_fn(test_X, scaler.fit_transform(test_y), BATCH_SIZE))
+    regressor.evaluate(input_fn=lambda: train_input_fn(test_X, test_y, BATCH_SIZE))
 
 
 # get predictions
@@ -135,13 +139,13 @@ for symbol in symbols:
     test_y = test_dict[symbol][1]
 
     # get predictions
-    predictions = list(regressor.predict(input_fn=lambda: train_input_fn(test_X, scaler.fit_transform(test_y), BATCH_SIZE)))
+    predictions = list(regressor.predict(input_fn=lambda: train_input_fn(test_X, test_y, BATCH_SIZE)))
     predict_y = [predictions[i]['predictions'] for i in range(0, len(predictions))]
     predict_y = np.asarray(predict_y).reshape(-1, 1)
 
     # transform scaled predictions back to normal
-    scaler.fit(test_y)
-    predict_y = scaler.inverse_transform(predict_y)
+    #scaler.fit(test_y)
+    #predict_y = scaler.inverse_transform(predict_y)
 
     # calculate metrics
     metrics['MAE'].append(
@@ -167,3 +171,7 @@ print('R Squared: Highest={}, Lowest={}, Mean={}'.format(
     min(metrics['R2']),
     np.mean(metrics['R2'])
 ))
+
+import matplotlib.pyplot as plt
+plt.plot(test_y)
+plt.plot(predict_y)

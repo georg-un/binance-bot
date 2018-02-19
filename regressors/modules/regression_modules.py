@@ -184,3 +184,23 @@ def combine_symbols(features_by_symbol, chunksize, batchsize, shuffle=True):
 
     # return whole numpy array
     return dataset
+
+
+def get_return(data_array, f_horizon):
+    """
+    Args:
+        data_array: A 1-dimensional numpy array containing the closing price of each period
+
+        f_horizon: An integer determining the base-period which shall be used to calculate the return
+                   e.g. if f_horizon==4 then the return is calculated as ((price at t4 / price at t0) -1)
+
+    Returns:
+        A 1-dimensional numpy array containing the return values for each period (shortened by the number of f_horizon)
+    """
+
+    return_array = (
+        (data_array[f_horizon:] /
+         data_array[:len(data_array)-f_horizon]) - 1
+    )
+
+    return return_array

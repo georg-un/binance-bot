@@ -6,8 +6,7 @@ verbose = True
 
 
 [symbols]
-symbol_list = ADAETH
-#ADXETH, AIONETH
+symbol_list = ADAETH, ADXETH, AIONETH, ARKETH, BCCETH, BNBETH, DASHETH, BTGETH, BNTETH, TNTETH, TRXETH, STRATETH, IOTAETH
 
 
 [intervals]
