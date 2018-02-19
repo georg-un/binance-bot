@@ -28,6 +28,8 @@ intervals = getlist(configParser.get('intervals', 'interval_list'))
 
 BATCH_SIZE = 5
 F_HORIZON = 1
+TEST_RATIO = 0.75
+LEARNING_RATE = 0.0001
 
 
 # MODEL
@@ -38,30 +40,34 @@ regressor = tf.estimator.Estimator(model_fn=lstm_model,
                                    params={
                                        'feature_columns': get_default_feature_columns(),
                                        'batch_size': BATCH_SIZE,
-                                       'learning_rate': 0.0001
+                                       'learning_rate': LEARNING_RATE
                                    })
 
 
-# SET UP DATABASE CONNECTION
+# PREPARE DATA
 
 # connect to database
 db_con = sqlite3.connect(db_path)
 
+# set up dictionaries
 training_dict = {}
 test_dict = {}
 
+# download feature and price data for each symbol, split in training and test sets and write them to
+# their respective dictionaries
 with db_con:
     for symbol in symbols:
+
+        # select all features and the closing price
         cur = db_con.cursor()
         cur.execute('SELECT {0}_15m.close, {0}_15m_feat.* FROM {0}_15m_feat JOIN {0}_15m ON {0}_15m.t_open={0}_15m_feat.t_open'.format(symbol))
         data = np.array(cur.fetchall()).astype('float32')
 
+        # drop the first n observations (longest period length in feature calculation)
         data = data[100:, :]
 
-        # PREPARE DATA
-
         # split data into test and training
-        test_split = int(len(data) * 0.75)
+        test_split = int(len(data) * TEST_RATIO)
 
         # create training data
         train_X = data[:test_split, 2:]
@@ -80,7 +86,7 @@ with db_con:
         #test_y = scaler.fit_transform(test_y.reshape(-1, 1))
         test_y = test_y.reshape(-1, 1)
 
-        # join and make dictionary
+        # join training data and make dictionary
         training_data = np.hstack((train_X, train_y))
         training_dict[symbol] = training_data
 
@@ -100,6 +106,8 @@ train_y = training_data[1].flatten()
 # transform training data
 train_X, train_y = transform_fn(train_X, train_y)
 
+
+# TRAIN AND EVALUATE MODEL
 
 # train model
 for _ in range(0, 5):
