@@ -1,6 +1,9 @@
 import tensorflow as tf
 import tensorflow.contrib.rnn as rnn
 
+# TODO: make layer creation dynamic and dependend on params
+# TODO: implement random weight initiation
+
 
 def lstm_model(features, labels, mode, params):
 
@@ -8,10 +11,6 @@ def lstm_model(features, labels, mode, params):
     input_layer = tf.feature_column.input_layer(features, params['feature_columns'])
     input_layer = tf.reshape(tensor=input_layer,
                              shape=[-1, params['batch_size'], 1])
-
-    # reshape lable tensor
-    targets = tf.reshape(tensor=labels,
-                         shape=[-1, params['batch_size'], 1])
 
     # create LSTM cells
     first_cell = rnn.BasicLSTMCell(num_units=128, activation=tf.nn.relu)
@@ -31,9 +30,13 @@ def lstm_model(features, labels, mode, params):
     # prediction operation
     if mode == tf.estimator.ModeKeys.PREDICT:
         predictions = {
-            'price': outputs
+            'predicted': outputs
         }
         return tf.estimator.EstimatorSpec(mode, predictions=predictions)
+
+    # reshape lable tensor
+    targets = tf.reshape(tensor=labels,
+                         shape=[-1, params['batch_size'], 1])
 
     # evaluation operation
     loss = tf.reduce_sum(tf.square(outputs - targets))
