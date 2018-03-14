@@ -5,6 +5,9 @@ import numpy as np
 import tensorflow as tf
 
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import explained_variance_score
+from sklearn.metrics import r2_score
 
 from general.general_modules import getlist
 from regressors.modules.regression_modules import transform_fn
@@ -12,6 +15,7 @@ from regressors.modules.regression_modules import train_input_fn
 from regressors.modules.regression_modules import get_default_feature_columns
 from regressors.modules.lstm_function import lstm_model
 from regressors.modules.regression_modules import combine_symbols
+from regressors.modules.regression_modules import get_return
 
 
 # READ CONFIG
@@ -110,9 +114,9 @@ train_X, train_y = transform_fn(train_X, train_y)
 # TRAIN AND EVALUATE MODEL
 
 # train model
-for _ in range(0, 5):
+for _ in range(0, 2):
     regressor.train(input_fn=lambda: train_input_fn(train_X, train_y, BATCH_SIZE),
-                    steps=int(len(train_y) / BATCH_SIZE))
+                    steps=int(len(train_y)) / BATCH_SIZE)
 
 
 # evaluate model
@@ -122,4 +126,56 @@ for symbol in symbols:
 
     print('Evaluating {}'.format(symbol))
     regressor.evaluate(input_fn=lambda: train_input_fn(test_X, test_y, BATCH_SIZE),
-                       steps=int(len(test_y) / BATCH_SIZE))
+                       steps=int(len(test_y)) / BATCH_SIZE)
+
+
+# get predictions
+metrics = {'MAE': [],
+           'EVS': [],
+           'R2': []}
+
+for symbol in symbols:
+    test_X = test_dict[symbol][0]
+    test_y = test_dict[symbol][1]
+
+    # get predictions
+    predictions = list(regressor.predict(input_fn=tf.estimator.inputs.numpy_input_fn(x=test_X,
+                                                                                     y=test_y,
+                                                                                     queue_capacity=len(test_y),
+                                                                                     shuffle=False,
+                                                                                     batch_size=5)))
+
+    predict_y = [predictions[i]['predictions'] for i in range(0, len(predictions))]
+    predict_y = np.asarray(predict_y).reshape(-1, 1)
+
+    # transform scaled predictions back to normal
+    #scaler.fit(test_y)
+    #predict_y = scaler.inverse_transform(predict_y)
+
+    # calculate metrics
+    metrics['MAE'].append(
+        mean_absolute_error(test_y, predict_y))
+    metrics['EVS'].append(
+        explained_variance_score(test_y, predict_y))
+    metrics['R2'].append(
+        r2_score(test_y, predict_y))
+
+# print scores
+print('Explained Variance Score: Highest={}, Lowest={}, Mean={}'.format(
+    max(metrics['EVS']),
+    min(metrics['EVS']),
+    np.mean(metrics['EVS'])
+))
+print('Mean Absolute Error: Highest={}, Lowest={}, Mean={}'.format(
+    max(metrics['MAE']),
+    min(metrics['MAE']),
+    np.mean(metrics['MAE'])
+))
+print('R Squared: Highest={}, Lowest={}, Mean={}'.format(
+    max(metrics['R2']),
+    min(metrics['R2']),
+    np.mean(metrics['R2'])
+))
+
+
+
