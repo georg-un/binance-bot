@@ -1,0 +1,8 @@
+#
+# You need to install TA-lib before you can install its' Python package. See https://stackoverflow.com/a/48359742/9291522
+#
+python-binance
+numpy
+pandas
+ta-lib
+# sklearn
