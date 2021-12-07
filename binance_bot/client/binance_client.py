@@ -3,7 +3,7 @@ import datetime as dt
 
 from binance.client import Client
 
-from binance_bot.config.credentials import Credentials
+from binance_bot.configs.credentials import Credentials
 
 
 class BinanceClient:

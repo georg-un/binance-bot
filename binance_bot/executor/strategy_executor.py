@@ -1,6 +1,6 @@
 import numpy as np
 
-from binance_bot.binance.binance_client import BinanceClient
+from binance_bot.client.binance_client import BinanceClient
 from binance_bot.executor.abstract_executor import AbstractExecutor
 
 
