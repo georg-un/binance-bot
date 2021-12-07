@@ -15,7 +15,7 @@ def calc_exponential_smoothing(values: np.ndarray, exp_smoothing_alpha: str) -> 
 # TREND INDICATORS
 
 def calc_bollinger_bands(
-        values: np.ndarray,
+        prices: np.ndarray,
         timestamps: np.ndarray,
         bbands_period: int,
         bbands_lower: int,
@@ -28,7 +28,7 @@ def calc_bollinger_bands(
     with small values (https://github.com/mrjbq7/ta-lib/issues/151)"""
 
     # calculate bollinger bands
-    results_list = talib.BBANDS(values * 10000,
+    results_list = talib.BBANDS(prices * 10000,
                                 timeperiod=bbands_period,
                                 nbdevup=bbands_upper,
                                 nbdevdn=bbands_lower,
@@ -45,18 +45,18 @@ def calc_bollinger_bands(
 
 
 def calc_ema(
-        values: np.ndarray,
+        prices: np.ndarray,
         timestamps: np.ndarray,
         ema_period_short: int,
         ema_period_mid: int,
         ema_period_long: int
 ) -> np.ndarray:
     # calculate an ema for each period
-    ema_short = talib.EMA(values,
+    ema_short = talib.EMA(prices,
                           timeperiod=ema_period_short)
-    ema_mid = talib.EMA(values,
+    ema_mid = talib.EMA(prices,
                         timeperiod=ema_period_mid)
-    ema_long = talib.EMA(values,
+    ema_long = talib.EMA(prices,
                          timeperiod=ema_period_long)
     # construct 4d-array and return it
     ema = np.column_stack((ema_short, ema_mid, ema_long,
@@ -65,18 +65,18 @@ def calc_ema(
 
 
 def calc_sma(
-        values: np.ndarray,
+        prices: np.ndarray,
         timestamps: np.ndarray,
         sma_period_short: int,
         sma_period_mid: int,
         sma_period_long: int
 ) -> np.ndarray:
     # calculate an ema for each period
-    sma_short = talib.SMA(values,
+    sma_short = talib.SMA(prices,
                           timeperiod=sma_period_short)
-    sma_mid = talib.SMA(values,
+    sma_mid = talib.SMA(prices,
                         timeperiod=sma_period_mid)
-    sma_long = talib.SMA(values,
+    sma_long = talib.SMA(prices,
                          timeperiod=sma_period_long)
 
     # construct 4d-array and return it
