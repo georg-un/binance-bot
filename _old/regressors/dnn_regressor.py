@@ -9,13 +9,12 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import explained_variance_score
 from sklearn.metrics import r2_score
 
-from general.general_modules import getlist
-from regressors.modules.regression_modules import transform_fn
-from regressors.modules.regression_modules import train_input_fn
-from regressors.modules.regression_modules import get_default_feature_columns
-from regressors.modules.lstm_function import lstm_model
-from regressors.modules.regression_modules import combine_symbols
-from regressors.modules.regression_modules import get_return
+from _old.general.general_modules import getlist
+from _old.regressors.modules.regression_modules import transform_fn
+from _old.regressors.modules.regression_modules import train_input_fn
+from _old.regressors.modules.regression_modules import get_default_feature_columns
+from _old.regressors.modules.regression_modules import combine_symbols
+from _old.regressors.modules.regression_modules import get_return
 
 
 # READ CONFIG
@@ -33,19 +32,14 @@ intervals = getlist(configParser.get('intervals', 'interval_list'))
 BATCH_SIZE = 5
 F_HORIZON = 1
 TEST_RATIO = 0.75
-LEARNING_RATE = 0.0001
 
 
-# MODEL
+# DEFINE MODEL
 
 # define regressor
-regressor = tf.estimator.Estimator(model_fn=lstm_model,
-                                   model_dir='/home/georg/test/lstm',
-                                   params={
-                                       'feature_columns': get_default_feature_columns(),
-                                       'batch_size': BATCH_SIZE,
-                                       'learning_rate': LEARNING_RATE
-                                   })
+regressor = tf.estimator.DNNRegressor(hidden_units=[256, 128, 64, 32, 16],
+                                      feature_columns=get_default_feature_columns(),
+                                      model_dir='/home/georg/test/dnn')
 
 
 # PREPARE DATA
@@ -75,17 +69,21 @@ with db_con:
 
         # create training data
         train_X = data[:test_split, 2:]
-        train_y = data[F_HORIZON:F_HORIZON + test_split, 0]
+        train_y = data[:F_HORIZON + test_split, 0]
+        train_y = get_return(train_y, F_HORIZON)
 
         # create test data
-        test_X = data[test_split + 1: len(data) - F_HORIZON - 1, 2:]
-        test_y = data[test_split + 1 + F_HORIZON: len(data) - 1, 0]
+        test_X = data[test_split + 1: len(data) - F_HORIZON, 2:]
+        test_y = data[test_split + 1:, 0]
+        test_y = get_return(test_y, F_HORIZON)
 
         # scale data
         scaler = MinMaxScaler()
+
         train_X = scaler.fit_transform(train_X)
         #train_y = scaler.fit_transform(train_y.reshape(-1, 1))
         train_y = train_y.reshape(-1, 1)
+
         test_X = scaler.fit_transform(test_X)
         #test_y = scaler.fit_transform(test_y.reshape(-1, 1))
         test_y = test_y.reshape(-1, 1)
@@ -111,22 +109,24 @@ train_y = training_data[1].flatten()
 train_X, train_y = transform_fn(train_X, train_y)
 
 
-# TRAIN AND EVALUATE MODEL
+# TRAIN MODEL
 
 # train model
-for _ in range(0, 2):
-    regressor.train(input_fn=lambda: train_input_fn(train_X, train_y, BATCH_SIZE),
-                    steps=int(len(train_y)) / BATCH_SIZE)
+for epoch in range(0, 50):
+    print('Training: epoch {}'.format(epoch))
+    regressor.train(input_fn=lambda: train_input_fn(train_X, train_y, BATCH_SIZE), steps=int(len(train_y)/BATCH_SIZE))
 
 
-# evaluate model
+# EVALUATE MODEL
+
+# use build in evaluation
 for symbol in symbols:
     test_X = test_dict[symbol][0]
     test_y = test_dict[symbol][1]
 
     print('Evaluating {}'.format(symbol))
-    regressor.evaluate(input_fn=lambda: train_input_fn(test_X, test_y, BATCH_SIZE),
-                       steps=int(len(test_y)) / BATCH_SIZE)
+
+    regressor.evaluate(input_fn=lambda: train_input_fn(test_X, test_y, BATCH_SIZE))
 
 
 # get predictions
@@ -139,12 +139,7 @@ for symbol in symbols:
     test_y = test_dict[symbol][1]
 
     # get predictions
-    predictions = list(regressor.predict(input_fn=tf.estimator.inputs.numpy_input_fn(x=test_X,
-                                                                                     y=test_y,
-                                                                                     queue_capacity=len(test_y),
-                                                                                     shuffle=False,
-                                                                                     batch_size=5)))
-
+    predictions = list(regressor.predict(input_fn=lambda: train_input_fn(test_X, test_y, BATCH_SIZE)))
     predict_y = [predictions[i]['predictions'] for i in range(0, len(predictions))]
     predict_y = np.asarray(predict_y).reshape(-1, 1)
 
@@ -177,5 +172,6 @@ print('R Squared: Highest={}, Lowest={}, Mean={}'.format(
     np.mean(metrics['R2'])
 ))
 
-
-
+import matplotlib.pyplot as plt
+plt.plot(test_y)
+plt.plot(predict_y)
