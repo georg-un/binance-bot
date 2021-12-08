@@ -1,14 +1,11 @@
 from abc import ABC, abstractmethod
+from typing import List
 
-import numpy as np
+from binance_bot.strategy.strategy_action import StrategyAction
 
 
 class AbstractExecutor(ABC):
 
     @abstractmethod
-    def place_order_buy_market(self, pair: str, quantity: np.double) -> None:
-        pass
-
-    @abstractmethod
-    def place_order_sell_market(self, pair: str, quantity: np.double) -> None:
+    def execute(self, actions: List[StrategyAction]) -> None:
         pass
