@@ -7,6 +7,14 @@ class KlineProps:
     VOLUME = "volume"
 
 
+class OrderProps:
+    PAIR = "pair"
+    PRICE = "price"
+    QUANTITY = "quantity"
+    TYPE = "type"
+    SIDE = "side"
+
+
 class Indicators:
     BOLL_UP = "boll_up"
     BOLL_MID = "boll_mid"
