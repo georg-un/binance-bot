@@ -22,12 +22,12 @@ class FeatureCalculator:
         closes = klines[KlineProps.CLOSE]
         volumes = klines[KlineProps.VOLUME]
 
-        #if self._config.EXP_SMOOTHING_ENABLED:
-        #    highs = calc_exponential_smoothing(prices=highs, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
-        #    lows = calc_exponential_smoothing(prices=lows, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
-        #    opens = calc_exponential_smoothing(prices=opens, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
-        #    closes = calc_exponential_smoothing(prices=closes, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
-        #    volumes = calc_exponential_smoothing(prices=volumes, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
+        if self._config.EXP_SMOOTHING_ENABLED:
+            highs = calc_exponential_smoothing(prices=highs, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
+            lows = calc_exponential_smoothing(prices=lows, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
+            opens = calc_exponential_smoothing(prices=opens, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
+            closes = calc_exponential_smoothing(prices=closes, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
+            volumes = calc_exponential_smoothing(prices=volumes, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
 
         features: List[Union[pd.DataFrame, pd.Series]] = [
             calc_bollinger_bands(

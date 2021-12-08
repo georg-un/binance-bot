@@ -12,10 +12,8 @@ with small values (https://github.com/mrjbq7/ta-lib/issues/151)
 
 # INDICATOR FUNCTIONS
 
-def calc_exponential_smoothing(prices: np.ndarray, exp_smoothing_alpha: str) -> np.ndarray:
-    smooth_list = pd.DataFrame(prices)
-    smooth_list = pd.ewma(smooth_list, alpha=exp_smoothing_alpha)
-    return np.array(smooth_list)
+def calc_exponential_smoothing(prices: pd.Series, exp_smoothing_alpha: float) -> pd.Series:
+    return prices.ewm(alpha=exp_smoothing_alpha).mean()
 
 
 # TREND INDICATORS
