@@ -7,7 +7,6 @@ class AbstractState(ABC):
 
     klines: pd.DataFrame = None
     features: pd.DataFrame = None
-    open_orders: pd.DataFrame = None
     assets: pd.DataFrame = None
 
     @abstractmethod
