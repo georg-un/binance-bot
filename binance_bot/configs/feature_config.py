@@ -4,7 +4,7 @@ import configparser
 class FeatureConfig:
     def __init__(self):
         self._configparser = configparser.ConfigParser()
-        self._configparser.read(r'configs/feature-config.ini')
+        self._configparser.read(r'config/feature-config.ini')
 
         # trend indicators
         # exponential smoothing
