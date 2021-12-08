@@ -5,7 +5,7 @@ import pandas as pd
 from binance.client import Client
 
 from binance_bot.configs.credentials import Credentials
-from binance_bot.constants import KlineProps, OrderProps
+from binance_bot.constants import KlineProps, OrderProps, AssetProps
 
 
 class BinanceClient:
@@ -46,7 +46,8 @@ class BinanceClient:
         return pd.DataFrame(self._client.get_open_orders())
 
     def get_assets(self, symbols: str) -> pd.DataFrame:
-        return pd.DataFrame([self._client.get_asset_balance(asset=asset) for asset in symbols])
+        return pd.DataFrame([self._client.get_asset_balance(asset=asset) for asset in symbols])\
+            .astype({AssetProps.ASSET: 'str', AssetProps.FREE: 'float64', AssetProps.LOCKED: 'float64'})
 
     @staticmethod
     def api_time_format(ms: int):

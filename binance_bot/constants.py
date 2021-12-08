@@ -15,6 +15,12 @@ class OrderProps:
     SIDE = "side"
 
 
+class AssetProps:
+    ASSET = "asset"
+    FREE = "free"
+    LOCKED = "locked"
+
+
 class Indicators:
     BOLL_UP = "boll_up"
     BOLL_MID = "boll_mid"
