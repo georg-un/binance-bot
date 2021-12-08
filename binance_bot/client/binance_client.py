@@ -14,6 +14,7 @@ class BinanceClient:
         self._client = Client(api_key=credentials.API_KEY, api_secret=credentials.API_SECRET)
 
     def place_order_sell_market(self, pair: str, quantity: np.double) -> None:
+        print("SELL", str(quantity), pair)
         self._client.create_test_order(
             symbol=pair,
             side=Client.SIDE_SELL,
@@ -21,7 +22,8 @@ class BinanceClient:
             quantity=quantity
         )
 
-    def place_order_buy_market(self, pair: str, quantity) -> None:
+    def place_order_buy_market(self, pair: str, quantity: np.double) -> None:
+        print("BUY", str(quantity), pair)
         self._client.create_test_order(
             symbol=pair,
             side=Client.SIDE_BUY,

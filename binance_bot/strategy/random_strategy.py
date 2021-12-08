@@ -22,17 +22,20 @@ class RandomStrategy(AbstractStrategy):
     ) -> List[StrategyAction]:
         actions: List[StrategyAction] = []
         # randomly buy something
-        if random.choice([True, False]):
+        if random.choice([True, True, False]):
             actions.append(
-                StrategyAction(side="BUY", pair=random.choice(self._config.PAIRS), quantity=0.1)
+                StrategyAction(side="BUY", pair=random.choice(self._config.PAIRS), quantity=1.0)
             )
         # randomly sell something
-        if random.choice([True, False]):
+        if random.choice([True, True, False]):
             sellable_assets = assets[:][assets[AssetProps.FREE] > 0]
-            sellable_assets = sellable_assets[sellable_assets[AssetProps.ASSET] != "USDT"]
             if len(sellable_assets) > 0:
                 asset = sellable_assets.sample()
                 actions.append(
-                    StrategyAction(side="SELL", pair=asset[AssetProps.ASSET], quantity=asset[AssetProps.FREE])
+                    StrategyAction(
+                        side="SELL",
+                        pair=asset[AssetProps.ASSET].values[0] + self._config.BASE_SYMBOL,
+                        quantity=asset[AssetProps.FREE].values[0]
+                    )
                 )
         return actions

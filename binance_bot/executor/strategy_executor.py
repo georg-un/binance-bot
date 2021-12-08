@@ -1,5 +1,7 @@
 from typing import List
 
+from binance.exceptions import BinanceAPIException
+
 from binance_bot.client.binance_client import BinanceClient
 from binance_bot.executor.abstract_executor import AbstractExecutor
 from binance_bot.strategy.strategy_action import StrategyAction
@@ -14,6 +16,12 @@ class StrategyExecutor(AbstractExecutor):
         sell_orders = [action for action in actions if action.side == "SELL"]
         buy_orders = [action for action in actions if action.side == "BUY"]
         for order in sell_orders:
-            self._client.place_order_sell_market(pair=order.pair, quantity=order.quantity)
+            try:
+                self._client.place_order_sell_market(pair=order.pair, quantity=order.quantity)
+            except BinanceAPIException as e:
+                print(e)
         for order in buy_orders:
-            self._client.place_order_buy_market(pair=order.pair, quantity=order.quantity)
+            try:
+                self._client.place_order_buy_market(pair=order.pair, quantity=order.quantity)
+            except BinanceAPIException as e:
+                print(e)
