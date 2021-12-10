@@ -24,7 +24,7 @@ class RandomStrategy(AbstractStrategy):
         # randomly buy something
         if random.choice([True, True, False]):
             actions.append(
-                StrategyAction(side="BUY", pair=random.choice(self._config.PAIRS), quantity=1.0)
+                StrategyAction(side="BUY", pair=self._config.TARGET_PAIR, quantity=1.0)
             )
         # randomly sell something
         if random.choice([True, True, False]):
@@ -34,7 +34,7 @@ class RandomStrategy(AbstractStrategy):
                 actions.append(
                     StrategyAction(
                         side="SELL",
-                        pair=asset[AssetProps.ASSET].values[0] + self._config.BASE_SYMBOL,
+                        pair=self._config.TARGET_PAIR,
                         quantity=asset[AssetProps.FREE].values[0]
                     )
                 )

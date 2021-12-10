@@ -1,4 +1,5 @@
 import datetime as dt
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -47,7 +48,7 @@ class BinanceClient:
     def get_open_orders(self) -> pd.DataFrame:
         return pd.DataFrame(self._client.get_open_orders())
 
-    def get_assets(self, symbols: str) -> pd.DataFrame:
+    def get_assets(self, symbols: List[str]) -> pd.DataFrame:
         return pd.DataFrame([self._client.get_asset_balance(asset=asset) for asset in symbols])\
             .astype({AssetProps.ASSET: 'str', AssetProps.FREE: 'float64', AssetProps.LOCKED: 'float64'})
 
