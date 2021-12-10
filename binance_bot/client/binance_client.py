@@ -32,13 +32,8 @@ class BinanceClient:
             quantity=quantity
         )
 
-    def get_historical_data(self, pair: str, interval: str, time_start: str, time_end: str) -> pd.DataFrame:
-        response = self._client.get_historical_klines(
-            symbol=pair,
-            interval=interval,
-            start_str=time_start,
-            end_str=time_end
-        )
+    def get_historical_data(self, pair: str, interval: str) -> pd.DataFrame:
+        response = self._client.get_historical_klines(symbol=pair, interval=interval, start_str=0)
         return self._klines_to_dataframe(np.array(response))
 
     def get_klines(self, pair: str, interval: str) -> pd.DataFrame:

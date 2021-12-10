@@ -6,3 +6,4 @@ numpy
 pandas
 ta-lib
 # sklearn
+psycopg2-binary
