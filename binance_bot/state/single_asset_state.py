@@ -3,7 +3,7 @@ from typing import List, Union
 import pandas as pd
 
 from binance_bot.client.binance_client import BinanceClient
-from binance_bot.configs.client_config import ClientConfig
+from binance_bot.configs.main_config import MainConfig
 from binance_bot.processing.feature_calculator import FeatureCalculator
 from binance_bot.state.abstract_state import AbstractState
 
@@ -13,11 +13,11 @@ class SingleAssetState(AbstractState):
     def __init__(
             self,
             client: BinanceClient,
-            client_config: ClientConfig,
+            main_config: MainConfig,
             feature_calculator: FeatureCalculator
     ):
         self._client = client
-        self._client_config = client_config
+        self._client_config = main_config
         self._feature_calc = feature_calculator
 
     def next_step(self):

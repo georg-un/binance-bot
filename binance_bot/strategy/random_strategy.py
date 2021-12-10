@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 
-from binance_bot.configs.client_config import ClientConfig
+from binance_bot.configs.main_config import MainConfig
 from binance_bot.constants import AssetProps
 from binance_bot.strategy.abstract_strategy import AbstractStrategy
 from binance_bot.strategy.strategy_action import StrategyAction
@@ -11,8 +11,8 @@ from binance_bot.strategy.strategy_action import StrategyAction
 
 class RandomStrategy(AbstractStrategy):
 
-    def __init__(self, global_config: ClientConfig):
-        self._config = global_config
+    def __init__(self, main_config: MainConfig):
+        self._config = main_config
 
     def apply(
             self,
