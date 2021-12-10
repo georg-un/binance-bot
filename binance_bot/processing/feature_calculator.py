@@ -14,7 +14,8 @@ class FeatureCalculator:
 
     def calculate_features(
             self,
-            klines: pd.DataFrame
+            klines: pd.DataFrame,
+            additional_features: pd.DataFrame = None
     ) -> pd.DataFrame:
         opens = klines[KlineProps.OPEN]
         highs = klines[KlineProps.HIGH]
@@ -52,6 +53,7 @@ class FeatureCalculator:
             calc_obv(
                 prices=closes,
                 volumes=volumes
-            )
+            ),
+            additional_features
         ]
         return pd.concat(features, axis=1)
