@@ -24,12 +24,12 @@ class SingleAssetState(AbstractState):
         # get assets
         self.assets = self._client.get_assets([self._client_config.TARGET_SYMBOL, self._client_config.BASE_SYMBOL])
         # get klines of target pair
-        self.klines = self._client.get_klines(self._client_config.TARGET_PAIR, self._client_config.INTERVALS[0])
+        self.klines = self._client.get_klines(self._client_config.TARGET_PAIR, self._client_config.TARGET_INTERVAL)
         # get klines of feature pairs
         feature_pairs: Union[pd.DataFrame, None] = None
         if self._client_config.FEATURE_PAIRS and len(self._client_config.FEATURE_PAIRS) > 0:
             for pair in self._client_config.FEATURE_PAIRS:
-                pair_klines = self._client.get_klines(pair, self._client_config.INTERVALS[0])
+                pair_klines = self._client.get_klines(pair, self._client_config.TARGET_INTERVAL)
                 pair_klines = pair_klines.add_prefix(pair + '_')
                 feature_pairs = pd.concat([feature_pairs, pair_klines], axis=1)
                 print(feature_pairs)

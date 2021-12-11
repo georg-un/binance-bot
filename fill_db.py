@@ -34,7 +34,7 @@ pairs = [main_config.TARGET_PAIR] + main_config.FEATURE_PAIRS
 # Download all data
 pair_data: Dict[str, pd.DataFrame] = {}
 for pair in pairs:
-    pair_data[pair] = binance_client.get_historical_data(pair=pair, interval=main_config.INTERVALS[0])
+    pair_data[pair] = binance_client.get_historical_data(pair=pair, interval=main_config.TARGET_INTERVAL)
 # Trim dataframes to same length
 pair_data = trim_dfs_to_same_length(pair_data)
 # Write to DB

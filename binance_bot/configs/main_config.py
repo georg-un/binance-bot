@@ -10,7 +10,7 @@ class MainConfig:
         self.TARGET_SYMBOL = self._configParser.get('symbols', 'target_symbol')
         self.BASE_SYMBOL = self._configParser.get('symbols', 'base_symbol')
         self.FEATURE_PAIRS = getlist(self._configParser.get('symbols', 'feature_pairs'))
-        self.INTERVALS = getlist(self._configParser.get('intervals', 'interval_list'))
+        self.TARGET_INTERVAL = self._configParser.get('intervals', 'target_interval')
         self.TARGET_PAIR = self.TARGET_SYMBOL + self.BASE_SYMBOL
         self.DATABASE_CONFIG = DatabaseConfig(
             host=self._configParser.get('database', 'host'),
