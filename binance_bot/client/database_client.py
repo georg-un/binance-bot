@@ -68,5 +68,5 @@ class DatabaseClient:
         _cur.close()
 
     @staticmethod
-    def read_table(db_con: Any, pair: str) -> pd.DataFrame:
+    def read_table(pair: str, db_con: Any) -> pd.DataFrame:
         return pd.read_sql_query(f"SELECT * from {pair}", db_con)
