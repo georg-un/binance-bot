@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict
 
 from binance_bot.client.binance_client import BinanceClient
 from binance_bot.client.database_client import *
