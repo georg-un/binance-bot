@@ -10,6 +10,8 @@ from binance_bot.constants import KlineProps
 
 class DatabaseClient:
 
+    con = None
+
     def __init__(self, database_config: DatabaseConfig):
         self.conf = database_config
 
@@ -29,7 +31,7 @@ class DatabaseClient:
     def _drop_database(self) -> None:
         self._execute_autocommit_statement(f"DROP database {self.conf.dbname}")
 
-    def recreate_database(self):
+    def _recreate_database(self):
         try:
             self._drop_database()
         except psycopg2.errors.InvalidCatalogName:
@@ -37,8 +39,10 @@ class DatabaseClient:
         finally:
             self._create_database()
 
-    def get_database_connection(self) -> Any:
-        return psycopg2.connect(
+    def open_database_connection(self, recreate_db: bool = False) -> Any:
+        if recreate_db:
+            self._recreate_database()
+        self.con = psycopg2.connect(
             host=self.conf.host,
             port=self.conf.port,
             dbname=self.conf.dbname,
@@ -46,9 +50,12 @@ class DatabaseClient:
             password=self.conf.password
         )
 
-    @staticmethod
-    def create_klines_table(db_con: Any, pair: str) -> None:
-        _cur = db_con.cursor()
+    def close_database_connection(self):
+        self.con.close()
+        self.con = None
+
+    def create_klines_table(self, pair: str) -> None:
+        _cur = self.con.cursor()
         _cur.execute(f"CREATE TABLE {pair} ("
                      f"{KlineProps.TIME_OPEN} BIGINT, "
                      f"{KlineProps.OPEN} NUMERIC, "
@@ -56,17 +63,15 @@ class DatabaseClient:
                      f"{KlineProps.LOW} NUMERIC, "
                      f"{KlineProps.CLOSE} NUMERIC, "
                      f"{KlineProps.VOLUME} NUMERIC)")
-        db_con.commit()
+        self.con.commit()
         _cur.close()
 
-    @staticmethod
-    def insert_klines_into_table(db_con: Any, pair: str, data: pd.DataFrame) -> None:
-        _cur = db_con.cursor()
+    def insert_klines_into_table(self, pair: str, data: pd.DataFrame) -> None:
+        _cur = self.con.cursor()
         for row in data.values:
             _cur.execute(f"INSERT INTO {pair} VALUES (%s, %s, %s, %s, %s, %s)", row)
-        db_con.commit()
+        self.con.commit()
         _cur.close()
 
-    @staticmethod
-    def read_table(pair: str, db_con: Any) -> pd.DataFrame:
-        return pd.read_sql_query(f"SELECT * from {pair}", db_con)
+    def read_table(self, pair: str) -> pd.DataFrame:
+        return pd.read_sql_query(f"SELECT * from {pair}", self.con)
