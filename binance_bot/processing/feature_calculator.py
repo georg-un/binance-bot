@@ -31,6 +31,7 @@ class FeatureCalculator:
             volumes = calc_exponential_smoothing(prices=volumes, exp_smoothing_alpha=self._config.EXP_SMOOTHING_ALPHA)
 
         features: List[Union[pd.DataFrame, pd.Series]] = [
+            klines[KlineProps.TIME_OPEN],
             calc_bollinger_bands(
                 prices=closes,
                 bbands_period=self._config.BBANDS_PERIOD,

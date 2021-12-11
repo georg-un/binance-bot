@@ -10,5 +10,5 @@ class AbstractState(ABC):
     assets: pd.DataFrame = None
 
     @abstractmethod
-    def next_step(self):
+    def next_step(self) -> None:
         pass
