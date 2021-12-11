@@ -29,8 +29,8 @@ while True:
     else:
         try:
             state.next_step()
-            actions = strategy.apply(klines=state.klines, features=state.features, assets=state.assets)
-            executor.execute(actions)
+            action = strategy.apply(klines=state.klines, features=state.features, assets=state.assets)
+            executor.execute(action)
             last_kline_timestamp = state.klines[KlineProps.TIME_OPEN].iloc[-1] + INTERVAL_MS
         except DataFrameMissmatchError as e:
             print(str(e), "Retrying...")
