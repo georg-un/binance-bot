@@ -6,7 +6,7 @@ import pandas as pd
 from binance_bot.client.binance_client import BinanceClient
 from binance_bot.client.database_client import DatabaseClient
 from binance_bot.configs.main_config import MainConfig
-from binance_bot.constants import AssetProps
+from binance_bot.constants import AssetProps, KlineProps
 from binance_bot.processing.feature_calculator import FeatureCalculator
 from binance_bot.state.abstract_state import AbstractState
 
@@ -45,7 +45,7 @@ class TrainingState(AbstractState):
         # get klines of feature pairs
         feature_pairs: Union[pd.DataFrame, None] = None
         for pair, data in self._feature_pair_tables.items():
-            pair_klines = data.iloc[self._start_index, self._end_index]
+            pair_klines = data.iloc[self._start_index: self._end_index]
             pair_klines = pair_klines.add_prefix(pair + '_')
             feature_pairs = pd.concat([feature_pairs, pair_klines], axis=1)
         # Calculate all features
@@ -55,14 +55,21 @@ class TrainingState(AbstractState):
         self._end_index += 1
 
     def _generate_random_assets(self) -> pd.DataFrame:
-        target_symbol_asset = {
-            [AssetProps.ASSET]: self._main_config.TARGET_SYMBOL,
-            [AssetProps.LOCKED]: 0,
-            [AssetProps.FREE]: 0
-        }
-        base_symbol_asset = {
-            [AssetProps.ASSET]: self._main_config.BASE_SYMBOL,
-            [AssetProps.LOCKED]: 0,
-            [AssetProps.FREE]: random.randint(1, 10000)
-        }
-        return pd.DataFrame([target_symbol_asset, base_symbol_asset])
+        assets = [
+            {
+                AssetProps.ASSET: self._main_config.TARGET_SYMBOL,
+                AssetProps.LOCKED: 0,
+                AssetProps.FREE: 0
+            },
+            {
+                AssetProps.ASSET: self._main_config.BASE_SYMBOL,
+                AssetProps.LOCKED: 0,
+                AssetProps.FREE: random.randint(1, 10000)
+            }
+        ]
+        return pd.DataFrame(data=assets)
+
+    def get_total_asset_value(self) -> float:
+        target_symbol_amount = self.assets.loc[self.assets[AssetProps.ASSET] == self._main_config.TARGET_SYMBOL][AssetProps.FREE].iloc[0]
+        base_symbol_amount = self.assets.loc[self.assets[AssetProps.ASSET] == self._main_config.BASE_SYMBOL][AssetProps.FREE].iloc[0]
+        return base_symbol_amount + (target_symbol_amount / self.klines[KlineProps.CLOSE].iloc[-1])

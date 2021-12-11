@@ -22,16 +22,17 @@ class RandomStrategy(AbstractStrategy):
     ) -> StrategyAction:
         target_symbol_asset = assets.loc[assets[AssetProps.ASSET] == self._config.TARGET_SYMBOL]
         base_symbol_asset = assets.loc[assets[AssetProps.ASSET] == self._config.BASE_SYMBOL]
-        if target_symbol_asset[AssetProps.FREE].iloc[0] > 0:
-            if random.choice([True, True, False]):
-                return StrategyAction(
-                    side="SELL",
-                    pair=self._config.TARGET_PAIR,
-                    quantity=klines[KlineProps.CLOSE].iloc[-1] * base_symbol_asset[AssetProps.FREE]
-                )
-        else:
+        max_sellable_qty = target_symbol_asset[AssetProps.FREE].iloc[0]
+        max_buyable_qty = klines[KlineProps.CLOSE].iloc[-1] * base_symbol_asset[AssetProps.FREE].iloc[0]
+        if random.choice([True, False, False]):
+            return StrategyAction(
+                side="SELL",
+                pair=self._config.TARGET_PAIR,
+                quantity=random.uniform(0, max_sellable_qty)
+            )
+        if random.choice([True, False]):
             return StrategyAction(
                 side="BUY",
                 pair=self._config.TARGET_PAIR,
-                quantity=target_symbol_asset[AssetProps.FREE]
+                quantity=random.uniform(0, max_buyable_qty)
             )
