@@ -7,9 +7,7 @@ import logging
 import sqlite3
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
-from general.general_modules import getlist
-from data.prepare.feature_processing import *
-
+from _old.general.general_modules import getlist
 
 # READ CONFIG
 

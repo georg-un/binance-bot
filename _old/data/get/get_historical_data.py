@@ -4,7 +4,7 @@
 from binance.client import Client
 import configparser
 import sqlite3
-from general.general_modules import getlist
+from _old.general.general_modules import getlist
 
 
 # READ FILES
